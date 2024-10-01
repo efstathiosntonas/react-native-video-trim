@@ -348,8 +348,26 @@ public class VideoTrimmerView extends FrameLayout implements IVideoTrimmerView {
 
   public void onMediaPause() {
     mTimingHandler.removeCallbacks(mTimingRunnable);
-    mediaPlayer.pause();
+    if(mediaPlayer.isPlaying()) {
+      mediaPlayer.pause();
+    }
     setPlayPauseViewIcon(false);
+  }
+
+  public void destroyMediaPlayer() {
+    mTimingHandler.removeCallbacks(mTimingRunnable);
+    try {
+      if (mediaPlayer != null) {
+        if (mediaPlayer.isPlaying()) {
+          mediaPlayer.stop();
+        }
+        mediaPlayer.release();
+      }
+    } catch (IllegalStateException e) {
+      // if it's video, resource is released with the view, and here we also call .release which will throw exception
+      e.printStackTrace();
+      Log.d(TAG, "onDestroy mediaPlayer is already released");
+    }
   }
 
   public void setOnTrimVideoListener(VideoTrimListener onTrimVideoListener) {
@@ -365,7 +383,7 @@ public class VideoTrimmerView extends FrameLayout implements IVideoTrimmerView {
   }
 
   public void onSaveClicked() {
-    onMediaPause();
+    destroyMediaPlayer();
     ffmpegSession = VideoTrimmerUtil.trim(
       mSourceUri.toString(),
       StorageUtil.getOutputPath(mContext, mOutputExt),
@@ -418,21 +436,6 @@ public class VideoTrimmerView extends FrameLayout implements IVideoTrimmerView {
       }
     } catch (Exception e) {
       e.printStackTrace();
-    }
-
-    try {
-      if (mediaPlayer != null) {
-        if (mediaPlayer.isPlaying()) {
-          mediaPlayer.stop();
-        }
-        mediaPlayer.reset();
-        mediaPlayer.release();
-        mediaPlayer = null;
-      }
-    } catch (IllegalStateException e) {
-      // if it's video, resource is released with the view, and here we also call .release which will throw exception
-      e.printStackTrace();
-      Log.d(TAG, "onDestroy mediaPlayer is already released");
     }
   }
 
