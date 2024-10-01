@@ -422,8 +422,12 @@ public class VideoTrimmerView extends FrameLayout implements IVideoTrimmerView {
 
     try {
       if (mediaPlayer != null) {
-        mediaPlayer.stop();
+        if (mediaPlayer.isPlaying()) {
+          mediaPlayer.stop();
+        }
+        mediaPlayer.reset();
         mediaPlayer.release();
+        mediaPlayer = null;
       }
     } catch (IllegalStateException e) {
       // if it's video, resource is released with the view, and here we also call .release which will throw exception
